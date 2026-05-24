@@ -29,9 +29,13 @@
 > > when i am working function i facing some issues regarding how to fetch data from api and render data on UI. i have try multiple times then and taken some ref. ideas from google and prevoius assignment work or from lec videos.
 > > when i am axios i am completely new about axios because i dont know how to work with axios and how to implement logic to get data from the api. then after i try multiple taken ref. from axios documentary i have solved this issus and got it perfect code example of fetch data from the api. because i need to fetch data in multiple methods so i am confused how i do actually.
 > > after the spend some time on logic creation i started working ui design responsive layout.
-> > i have created modal for edit todo. one more also i dont know about what is modal i searched on google actually i known about what is modal and how its work.
+> > i have created modal for edit todo. one more also i dont know about what is modal i searched on google actually i known about what is modal and how its work.'
 
+7. How to run Todo App
+   > > using task added input to add new and task description in database.
+   > > i have created search input which working of searching todos as per type user.
+   > > after below todo body app which is created for todo display.
+   > > two more functionallity added in same body todo edit and delete, edit button working as a edit todo and replace with another data. delete button working for delete todo from database. all the features working as expect todo add in localstorage add, status changing, edit, delete.
 
 Api URl - http://localhost:8080/api/todos
-Github URL - https://github.com/suthar-bhavesh/MERN-Todo-App.git 
-Live URL - 
+Github URL - https://github.com/suthar-bhavesh/MERN-Todo-App.git
