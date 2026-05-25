@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, Pencil } from "lucide-react";
 const api_key = "http://localhost:8080/api/todos";
 
@@ -21,27 +21,29 @@ function App() {
   const [deleteErrorId, setdeleteErrorId] = useState("");
 
   // api call function
-  const fetchTodos = async () => {
-    setError("");
-
-    try {
-      const response = await axios.get(`${api_key}?search=${search}`);
-      setTodos(response.data);
-
-      localStorage.setItem("localtodos", JSON.stringify(response.data));
-    } catch (err) {
-      const browserTodos = localStorage.getItem("localtodos");
-
-      if (browserTodos) {
-        setTodos(JSON.parse(browserTodos));
-        setError("Server Error. availble only local saved todos");
-      } else {
-        setError("Failed to fetch tasks. Please try again");
-      }
-    }
-  };
 
   useEffect(() => {
+    const fetchTodos = async () => {
+      setError("");
+
+      try {
+        const response = await axios.get(`${api_key}?search=${search}`);
+        setTodos(response.data);
+
+        localStorage.setItem("localtodos", JSON.stringify(response.data));
+      } catch (err) {
+        const browserTodos = localStorage.getItem("localtodos");
+
+        if (browserTodos) {
+          setTodos(JSON.parse(browserTodos));
+          setError(
+            console.log("Server Error. availble only local saved todos"),
+          );
+        } else {
+          setError("Failed to fetch tasks. Please try again");
+        }
+      }
+    };
     localStorage.setItem("search", search);
     fetchTodos();
   }, [search]);
