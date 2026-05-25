@@ -37,5 +37,10 @@
    > > after below todo body app which is created for todo display.
    > > two more functionallity added in same body todo edit and delete, edit button working as a edit todo and replace with another data. delete button working for delete todo from database. all the features working as expect todo add in localstorage add, status changing, edit, delete.
 
+
+
 Api URl - http://localhost:8080/api/todos
 Github URL - https://github.com/suthar-bhavesh/MERN-Todo-App.git
+
+Rendar Deploy Backend URL - https://mern-todo-app-gac3.onrender.com/api/todos
+Rendar Deploy Frontend URL - https://mern-todo-app-1-zthu.onrender.com/

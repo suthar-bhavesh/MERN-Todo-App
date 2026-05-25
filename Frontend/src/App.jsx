@@ -27,6 +27,8 @@ function App() {
     const fetchTodos = async () => {
       setError("");
 
+      if (!search.trim()) return;
+
       try {
         const response = await axios.get(`${api}?search=${search}`);
         setTodos(Array.isArray(response.data) ? response.data : []);
