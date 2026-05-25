@@ -220,7 +220,9 @@ function App() {
               </button>
             </div>
             {error && (
-              <p className="text-md-500 text-sm text-red-500">{error}</p>
+              <p className="text-md-500 text-sm text-red-500">
+                Please Enter your task
+              </p>
             )}
 
             <div>
