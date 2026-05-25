@@ -9,6 +9,7 @@ function App() {
     return localStorage.getItem("search") || "";
   });
   const [error, setError] = useState("");
+
   const [editid, seteditid] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [description, setdescription] = useState("");
@@ -24,26 +25,25 @@ function App() {
 
   useEffect(() => {
     const fetchTodos = async () => {
+      setError("");
+
       try {
         const response = await axios.get(`${api}?search=${search}`);
+        setTodos(Array.isArray(response.data) ? response.data : []);
 
-        const data = Array.isArray(response.data) ? response.data : [];
-        setTodos(data);
-
-        localStorage.setItem("localtodos", JSON.stringify(data));
-        setError("");
+        localStorage.setItem("localtodos", JSON.stringify(response.data));
       } catch (err) {
-        const local = localStorage.getItem("localtodos");
+        const browserTodos = localStorage.getItem("localtodos");
 
-        if (local) {
-          setTodos(JSON.parse(local));
-          setError("Offline mode: showing saved tasks");
+        if (browserTodos) {
+          setTodos(JSON.parse(browserTodos));
+          setError("Server Error. availble only local saved todos");
         } else {
-          setError("No data available offline");
+          setError("Failed to fetch tasks. Please try again");
         }
       }
     };
-
+    localStorage.setItem("search", search);
     fetchTodos();
   }, [search]);
 
@@ -220,9 +220,7 @@ function App() {
               </button>
             </div>
             {error && (
-              <p className="text-md-500 text-sm text-red-500">
-                Please Enter your task
-              </p>
+              <p className="text-md-500 text-sm text-red-500">{error}</p>
             )}
 
             <div>
