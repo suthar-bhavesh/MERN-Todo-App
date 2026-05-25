@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { X, Pencil } from "lucide-react";
-const api_key = "http://localhost:8080/api/todos";
+const api_key = "https://mern-todo-app-gac3.onrender.com/";
 
 function App() {
   const [title, setTitle] = useState("");
@@ -36,11 +36,9 @@ function App() {
 
         if (browserTodos) {
           setTodos(JSON.parse(browserTodos));
-          setError(
-            console.log("Server Error. availble only local saved todos"),
-          );
+          setError(alert("Server Error. availble only local saved todos"));
         } else {
-          setError(console.log("Failed to fetch tasks. Please try again"));
+          setError(alert("Failed to fetch tasks. Please try again"));
         }
       }
     };
@@ -64,7 +62,7 @@ function App() {
       setTitle("");
       setdescription("");
     } catch (err) {
-      setError("Failed to add task");
+      setError(alert("Failed to add task"));
     }
   };
 
@@ -80,7 +78,7 @@ function App() {
       setTodos(updatedTodos);
       localStorage.setItem("localtodos", JSON.stringify(updatedTodos));
     } catch (err) {
-      setError("Failed to update status");
+      setError(alert("Failed to update status"));
     }
   };
 
@@ -101,7 +99,7 @@ function App() {
       setEditTitle("");
       seteditDescription("");
     } catch (err) {
-      setError("Failed to update task");
+      setError(alert("Failed to update task"));
     }
   };
 
@@ -119,7 +117,7 @@ function App() {
       setTodos(updatedTodos);
       localStorage.setItem("localtodos", JSON.stringify(updatedTodos));
     } catch (err) {
-      setError("Failed to delete task");
+      setError(alert("Failed to delete task"));
     }
   };
 
