@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { X, Pencil } from "lucide-react";
 const api_key = "http://localhost:8080/api/todos";
 
@@ -40,7 +40,7 @@ function App() {
             console.log("Server Error. availble only local saved todos"),
           );
         } else {
-          setError("Failed to fetch tasks. Please try again");
+          setError(console.log("Failed to fetch tasks. Please try again"));
         }
       }
     };
