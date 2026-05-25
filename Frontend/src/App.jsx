@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { X, Pencil } from "lucide-react";
-const api_key = "https://mern-todo-app-gac3.onrender.com/";
+const api = import.meta.env.VITE_API_URL;
 
 function App() {
   const [title, setTitle] = useState("");
@@ -24,25 +24,26 @@ function App() {
 
   useEffect(() => {
     const fetchTodos = async () => {
-      setError("");
-
       try {
-        const response = await axios.get(`${api_key}?search=${search}`);
-        setTodos(response.data);
+        const response = await axios.get(`${api}?search=${search}`);
 
-        localStorage.setItem("localtodos", JSON.stringify(response.data));
+        const data = Array.isArray(response.data) ? response.data : [];
+        setTodos(data);
+
+        localStorage.setItem("localtodos", JSON.stringify(data));
+        setError("");
       } catch (err) {
-        const browserTodos = localStorage.getItem("localtodos");
+        const local = localStorage.getItem("localtodos");
 
-        if (browserTodos) {
-          setTodos(JSON.parse(browserTodos));
-          setError(alert("Server Error. availble only local saved todos"));
+        if (local) {
+          setTodos(JSON.parse(local));
+          setError("Offline mode: showing saved tasks");
         } else {
-          setError(alert("Failed to fetch tasks. Please try again"));
+          setError("No data available offline");
         }
       }
     };
-    localStorage.setItem("search", search);
+
     fetchTodos();
   }, [search]);
 
@@ -55,21 +56,21 @@ function App() {
       return;
     }
     try {
-      const response = await axios.post(api_key, { title, description });
+      const response = await axios.post(api, { title, description });
       const updatedTodos = [response.data, ...todos];
       setTodos(updatedTodos);
       localStorage.setItem("localtodos", JSON.stringify(updatedTodos));
       setTitle("");
       setdescription("");
     } catch (err) {
-      setError(alert("Failed to add task"));
+      setError("Failed to add task");
     }
   };
 
   // todos status changing function
   const toggleComplete = async (_id, currentStatus) => {
     try {
-      const response = await axios.put(`${api_key}/${_id}`, {
+      const response = await axios.put(`${api}/${_id}`, {
         isCompleted: !currentStatus,
       });
       const updatedTodos = todos.map((todo) =>
@@ -78,7 +79,7 @@ function App() {
       setTodos(updatedTodos);
       localStorage.setItem("localtodos", JSON.stringify(updatedTodos));
     } catch (err) {
-      setError(alert("Failed to update status"));
+      setError("Failed to update status");
     }
   };
 
@@ -86,7 +87,7 @@ function App() {
   const updateTodo = async (_id) => {
     if (!editTitle.trim()) return;
     try {
-      const response = await axios.put(`${api_key}/${_id}`, {
+      const response = await axios.put(`${api}/${_id}`, {
         title: editTitle,
         description: editDescription,
       });
@@ -99,7 +100,7 @@ function App() {
       setEditTitle("");
       seteditDescription("");
     } catch (err) {
-      setError(alert("Failed to update task"));
+      setError("Failed to update task");
     }
   };
 
@@ -112,12 +113,12 @@ function App() {
     setdeleteErrorId(null);
 
     try {
-      await axios.delete(`${api_key}/${_id}`);
+      await axios.delete(`${api}/${_id}`);
       const updatedTodos = todos.filter((todo) => todo._id !== _id);
       setTodos(updatedTodos);
       localStorage.setItem("localtodos", JSON.stringify(updatedTodos));
     } catch (err) {
-      setError(alert("Failed to delete task"));
+      setError("Failed to delete task");
     }
   };
 
@@ -248,90 +249,91 @@ function App() {
         {/* todos body list */}
         <div className="flex flex-col h-80 overflow-y-auto w-full">
           <ul className="w-full p-4 flex flex-col gap-2">
-            {todos.map((todo) => (
-              <div
-                key={todo._id}
-                className="flex w-full flex-col bg-amber-50 gap-2 p-3 rounded-lg"
-              >
-                <li className="flex border-2 border-black rounded-lg items-center p-2 justify-between w-full">
-                  <div className="flex gap-1.5 flex-col w-full">
-                    <div className="flex gap-1">
-                      <input
-                        type="checkbox"
-                        checked={todo.isCompleted}
-                        id="checkbox"
-                        name="checkbox"
-                        onChange={() => {
-                          toggleComplete(todo._id, todo.isCompleted);
-                          setdeleteErrorId(null);
-                        }}
-                      />
-                      <span
-                        onClick={() =>
-                          toggleComplete(todo._id, todo.isCompleted)
-                        }
-                        className={`cursor-pointer text-sm ${
-                          todo.isCompleted ? "line-through text-gray-400" : ""
-                        }`}
-                      >
-                        {todo.title}
-                      </span>
-                    </div>
-                    {deleteErrorId === todo._id && (
-                      <p className="text-sm text-red-500">
-                        Please mark task then Delete
-                      </p>
-                    )}
-                    {todo.description && (
-                      <>
-                        <div>
-                          <p
-                            className="overflow-hidden transition-all duration-300 text-sm text-gray-500 text-justify"
-                            style={{
-                              maxHeight:
-                                expandId === todo._id ? "500px" : "24px",
-                            }}
-                          >
-                            {todo.description}
-                          </p>
-                          {todo.description.length > 50 && (
-                            <button
-                              className="text-sm"
-                              onClick={() =>
-                                setexpandID(
-                                  expandId === todo._id ? null : todo._id,
-                                )
-                              }
+            {Array.isArray(todos) &&
+              todos.map((todo) => (
+                <div
+                  key={todo._id}
+                  className="flex w-full flex-col bg-amber-50 gap-2 p-3 rounded-lg"
+                >
+                  <li className="flex border-2 border-black rounded-lg items-center p-2 justify-between w-full">
+                    <div className="flex gap-1.5 flex-col w-full">
+                      <div className="flex gap-1">
+                        <input
+                          type="checkbox"
+                          checked={todo.isCompleted}
+                          id="checkbox"
+                          name="checkbox"
+                          onChange={() => {
+                            toggleComplete(todo._id, todo.isCompleted);
+                            setdeleteErrorId(null);
+                          }}
+                        />
+                        <span
+                          onClick={() =>
+                            toggleComplete(todo._id, todo.isCompleted)
+                          }
+                          className={`cursor-pointer text-sm ${
+                            todo.isCompleted ? "line-through text-gray-400" : ""
+                          }`}
+                        >
+                          {todo.title}
+                        </span>
+                      </div>
+                      {deleteErrorId === todo._id && (
+                        <p className="text-sm text-red-500">
+                          Please mark task then Delete
+                        </p>
+                      )}
+                      {todo.description && (
+                        <>
+                          <div>
+                            <p
+                              className="overflow-hidden transition-all duration-300 text-sm text-gray-500 text-justify"
+                              style={{
+                                maxHeight:
+                                  expandId === todo._id ? "500px" : "24px",
+                              }}
                             >
-                              {expandId === todo._id
-                                ? "Read Less... "
-                                : "Read More..."}
-                            </button>
-                          )}
-                        </div>
-                      </>
-                    )}
+                              {todo.description}
+                            </p>
+                            {todo.description.length > 50 && (
+                              <button
+                                className="text-sm"
+                                onClick={() =>
+                                  setexpandID(
+                                    expandId === todo._id ? null : todo._id,
+                                  )
+                                }
+                              >
+                                {expandId === todo._id
+                                  ? "Read Less... "
+                                  : "Read More..."}
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </li>
+                  <div className="flex gap-2 items-center">
+                    <Pencil
+                      size={40}
+                      onClick={() => {
+                        seteditid(todo._id);
+                        setEditTitle(todo.title);
+                        seteditDescription(todo.description || "");
+                      }}
+                      className="bg-amber-950 text-white p-1.5 rounded-full"
+                    />
+                    <button
+                      onClick={() => DeleteTodo(todo._id, todo.isCompleted)}
+                      className="bg-amber-950 w-19.5 h-11 rounded-lg text-white cursor-pointer text-sm"
+                    >
+                      Delete
+                    </button>
                   </div>
-                </li>
-                <div className="flex gap-2 items-center">
-                  <Pencil
-                    size={40}
-                    onClick={() => {
-                      seteditid(todo._id);
-                      setEditTitle(todo.title);
-                      seteditDescription(todo.description || "");
-                    }}
-                    className="bg-amber-950 text-white p-1.5 rounded-full"
-                  />
-                  <button
-                    onClick={() => DeleteTodo(todo._id, todo.isCompleted)}
-                    className="bg-amber-950 w-19.5 h-11 rounded-lg text-white cursor-pointer text-sm"
-                  >
-                    Delete
-                  </button>
                 </div>
-              </div>
-            ))}
+              ))}
           </ul>
         </div>
       </div>
