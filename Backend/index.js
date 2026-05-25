@@ -1,11 +1,10 @@
 const https = require("http");
 const express = require("express");
 const dotenv = require("dotenv");
+dotenv.config();
 const cors = require("cors");
 const DbConnection = require("./dbConnection/db");
 const todoRoutes = require("./routes/todo-routes");
-
-dotenv.config();
 
 DbConnection();
 
