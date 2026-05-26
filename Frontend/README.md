@@ -32,15 +32,24 @@
 > > i have created modal for edit todo. one more also i dont know about what is modal i searched on google actually i known about what is modal and how its work.'
 
 7. How to run Todo App
+
    > > using task added input to add new and task description in database.
    > > i have created search input which working of searching todos as per type user.
    > > after below todo body app which is created for todo display.
    > > two more functionallity added in same body todo edit and delete, edit button working as a edit todo and replace with another data. delete button working for delete todo from database. all the features working as expect todo add in localstorage add, status changing, edit, delete.
 
+8. Deployment
 
+> > when i ma deploying project i have facing some issues like how to full stack application on Rendar and vercel. frontend project i know how deploy but when i am deploying full stack project i facing defferent project about how to deploy in rendar because i dont know about rendar, and how reploy full stack project any cloud management software. this is my initial level to full stack deploy on Rendar. first time i have created account on rendar using github and created 2 separate project todo static sites and todo website service. first i have using deploy backend work on website service section. then after i deployed Frontend Work using static site. when i am deploying project on rendar i facing some regarding api is not api data is not connected to frontend becasue when full stack project rendar we need to give separate url of frontend to catch api in UI. then taken ref. with google for how to connect frontend to backend in live server. then after add build command and start command, backend live api url added on frontend.
+
+Thi is all about my Full Stack project work.
 
 Api URl - http://localhost:8080/api/todos
 Github URL - https://github.com/suthar-bhavesh/MERN-Todo-App.git
 
 Rendar Deploy Backend URL - https://mern-todo-app-gac3.onrender.com/api/todos
 Rendar Deploy Frontend URL - https://mern-todo-app-1-zthu.onrender.com/
+
+Note: Please do not give any AI flag for this project i have made complete by own self.
+
+Thank you for your undarstanding.

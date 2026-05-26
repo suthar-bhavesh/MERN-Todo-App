@@ -8,7 +8,17 @@ function App() {
   const [search, setSearch] = useState(() => {
     return localStorage.getItem("search") || "";
   });
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({
+    input: "",
+    fetch: "",
+    add: "",
+    toggle: "",
+    edit: "",
+    delete: {
+      id: null,
+      message: "",
+    },
+  });
 
   const [editid, seteditid] = useState(null);
   const [editTitle, setEditTitle] = useState("");
@@ -19,18 +29,20 @@ function App() {
     return localSavedTodos ? JSON.parse(localSavedTodos) : [];
   });
   const [expandId, setexpandID] = useState(null);
-  const [deleteErrorId, setdeleteErrorId] = useState("");
 
   // api call function
 
   useEffect(() => {
     const fetchTodos = async () => {
-      setError("");
-
-      if (!search.trim()) return;
+      setErrors((prev) => ({
+        ...prev,
+        fetch: "",
+      }));
 
       try {
-        const response = await axios.get(`${api}?search=${search}`);
+        const response = await axios.get(
+          search.trim() ? `${api}?search=${search}` : api,
+        );
         setTodos(Array.isArray(response.data) ? response.data : []);
 
         localStorage.setItem("localtodos", JSON.stringify(response.data));
@@ -39,9 +51,16 @@ function App() {
 
         if (browserTodos) {
           setTodos(JSON.parse(browserTodos));
-          setError("Server Error. availble only local saved todos");
+
+          setErrors((prev) => ({
+            ...prev,
+            fetch: "Server Error. Showing local saved todos",
+          }));
         } else {
-          setError("Failed to fetch tasks. Please try again");
+          setErrors((prev) => ({
+            ...prev,
+            fetch: "Failed to fetch tasks. Please try again",
+          }));
         }
       }
     };
@@ -54,18 +73,38 @@ function App() {
     e.preventDefault();
 
     if (!title.trim()) {
-      setError("Please enter task");
+      setErrors((prev) => ({
+        ...prev,
+        input: "Please Enter your task",
+      }));
       return;
     }
+
     try {
-      const response = await axios.post(api, { title, description });
+      const response = await axios.post(api, {
+        title,
+        description,
+      });
+
       const updatedTodos = [response.data, ...todos];
+
       setTodos(updatedTodos);
+
       localStorage.setItem("localtodos", JSON.stringify(updatedTodos));
+
       setTitle("");
       setdescription("");
+
+      setErrors((prev) => ({
+        ...prev,
+        input: "",
+        add: "",
+      }));
     } catch (err) {
-      setError("Failed to add task");
+      setErrors((prev) => ({
+        ...prev,
+        add: "Failed to add task",
+      }));
     }
   };
 
@@ -81,13 +120,22 @@ function App() {
       setTodos(updatedTodos);
       localStorage.setItem("localtodos", JSON.stringify(updatedTodos));
     } catch (err) {
-      setError("Failed to update status");
+      setErrors((prev) => ({
+        ...prev,
+        toggle: "Failed to update status",
+      }));
     }
   };
 
   // update todo function
   const updateTodo = async (_id) => {
-    if (!editTitle.trim()) return;
+    if (!editTitle.trim()) {
+      setErrors((prev) => ({
+        ...prev,
+        edit: "Please Enter required field",
+      }));
+      return;
+    }
     try {
       const response = await axios.put(`${api}/${_id}`, {
         title: editTitle,
@@ -102,30 +150,79 @@ function App() {
       setEditTitle("");
       seteditDescription("");
     } catch (err) {
-      setError("Failed to update task");
+      setErrors((prev) => ({
+        ...prev,
+        edit: "Failed to update task",
+      }));
     }
   };
 
   // todo delete function
   const DeleteTodo = async (_id, isCompleted) => {
     if (!isCompleted) {
-      setdeleteErrorId(_id);
+      setErrors((prev) => ({
+        ...prev,
+        delete: {
+          id: _id,
+          message: "Please mark task as completed before deleting",
+        },
+      }));
       return;
     }
-    setdeleteErrorId(null);
+
+    // clear old delete error
+    setErrors((prev) => ({
+      ...prev,
+      delete: {
+        id: null,
+        message: "",
+      },
+    }));
 
     try {
       await axios.delete(`${api}/${_id}`);
+
       const updatedTodos = todos.filter((todo) => todo._id !== _id);
+
       setTodos(updatedTodos);
+
       localStorage.setItem("localtodos", JSON.stringify(updatedTodos));
     } catch (err) {
-      setError("Failed to delete task");
+      setErrors((prev) => ({
+        ...prev,
+        delete: {
+          id: _id,
+          message: "Failed to delete task",
+        },
+      }));
     }
   };
 
   return (
     <section className="flex justify-center items-center h-screen">
+      {/* Api error Modal */}
+      {errors.fetch && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-96 flex flex-col gap-4">
+            <h2 className="text-xl font-bold text-red-500">Server Error</h2>
+
+            <p className="text-sm text-gray-700">{errors.fetch}</p>
+
+            <button
+              onClick={() =>
+                setErrors((prev) => ({
+                  ...prev,
+                  fetch: "",
+                }))
+              }
+              className="bg-amber-950 text-white h-10 rounded-lg"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Todos edits Modal */}
       {editid && (
         <div
@@ -153,9 +250,14 @@ function App() {
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                   placeholder="Edit Title"
-                  className="border-2 border-black w-full p-2 rounded-lg"
+                  className={`border-2 w-full p-3 rounded-lg resize-none ${
+                    errors.input || errors.edit
+                      ? "border-red-500"
+                      : "border-black"
+                  }`}
                 />
               </div>
+
               <div className="flex flex-col gap-2">
                 <label htmlFor="description" className="font-bold">
                   Description
@@ -167,7 +269,11 @@ function App() {
                   value={editDescription}
                   onChange={(e) => seteditDescription(e.target.value)}
                   placeholder="Edit Description"
-                  className="border-2 border-black w-full p-3 rounded-lg resize-none text-justify"
+                  className={`border-2 w-full p-3 rounded-lg resize-none text-justify ${
+                    errors.input || errors.edit
+                      ? "border-red-500"
+                      : "border-black"
+                  }`}
                 ></textarea>
               </div>
             </div>
@@ -208,10 +314,16 @@ function App() {
                 name="text"
                 onChange={(e) => {
                   setTitle(e.target.value);
-                  if (e.target.value.trim()) setError("");
+                  if (e.target.value.trim()) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      input: "",
+                      add: "",
+                    }));
+                  }
                 }}
                 className={`w-full p-2 border-2 outline-none rounded-bl-lg rounded-tl-lg text-sm ${
-                  error ? "border-red-500" : "border-black"
+                  errors.input || errors.add ? "border-red-500" : "border-black"
                 }`}
               />
               <button
@@ -221,10 +333,11 @@ function App() {
                 Add
               </button>
             </div>
-            {error && (
-              <p className="text-md-500 text-sm text-red-500">{error}</p>
+            {(errors.input || errors.add) && (
+              <p className="text-red-500 text-sm">
+                {errors.input || errors.add}
+              </p>
             )}
-
             <div>
               <textarea
                 name="description"
@@ -266,8 +379,15 @@ function App() {
                           id="checkbox"
                           name="checkbox"
                           onChange={() => {
+                            setErrors((prev) => ({
+                              ...prev,
+                              toggle: "",
+                              delete: {
+                                id: null,
+                                message: "",
+                              },
+                            }));
                             toggleComplete(todo._id, todo.isCompleted);
-                            setdeleteErrorId(null);
                           }}
                         />
                         <span
@@ -281,11 +401,7 @@ function App() {
                           {todo.title}
                         </span>
                       </div>
-                      {deleteErrorId === todo._id && (
-                        <p className="text-sm text-red-500">
-                          Please mark task then Delete
-                        </p>
-                      )}
+
                       {todo.description && (
                         <>
                           <div>
@@ -334,6 +450,11 @@ function App() {
                       Delete
                     </button>
                   </div>
+                  {errors.delete.id === todo._id && (
+                    <p className="text-red-500 text-sm">
+                      {errors.delete.message}
+                    </p>
+                  )}
                 </div>
               ))}
           </ul>
