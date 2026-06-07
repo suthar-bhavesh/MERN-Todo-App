@@ -21,6 +21,7 @@ function App() {
   });
 
   const [editid, seteditid] = useState(null);
+  const [deleteid, setdeleteid] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [description, setdescription] = useState("");
   const [editDescription, seteditDescription] = useState("");
@@ -29,6 +30,7 @@ function App() {
     return localSavedTodos ? JSON.parse(localSavedTodos) : [];
   });
   const [expandId, setexpandID] = useState(null);
+  const [deleteTodo, setdeleteTodo] = useState(null);
 
   // api call function
 
@@ -41,7 +43,7 @@ function App() {
 
       try {
         const response = await axios.get(
-          search.trim() ? `${api}?search=${search}` : api,
+          search.trim() ? `${api}?search=${encodeURIComponent(search)}` : api,
         );
         setTodos(Array.isArray(response.data) ? response.data : []);
 
@@ -80,10 +82,24 @@ function App() {
       return;
     }
 
+    const isDuplicate = todos.some((todo) => {
+      return (
+        todo.title.trim().toLowerCase() === title.trim().toLocaleLowerCase()
+      );
+    });
+
+    if (isDuplicate) {
+      setErrors((prev) => ({
+        ...prev,
+        add: "Task Already exit",
+      }));
+      return;
+    }
+
     try {
       const response = await axios.post(api, {
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
       });
 
       const updatedTodos = [response.data, ...todos];
@@ -119,6 +135,11 @@ function App() {
       );
       setTodos(updatedTodos);
       localStorage.setItem("localtodos", JSON.stringify(updatedTodos));
+
+      setErrors((prev) => ({
+        ...prev,
+        toggle: "",
+      }));
     } catch (err) {
       setErrors((prev) => ({
         ...prev,
@@ -136,11 +157,26 @@ function App() {
       }));
       return;
     }
+    const isDuplicate = todos.some(
+      (todo) =>
+        todo._id !== _id &&
+        todo.title.trim().toLowerCase() === editTitle.trim().toLowerCase(),
+    );
+
+    if (isDuplicate) {
+      setErrors((prev) => ({
+        ...prev,
+        edit: "Task Already exists",
+      }));
+      return;
+    }
+
     try {
       const response = await axios.put(`${api}/${_id}`, {
         title: editTitle,
         description: editDescription,
       });
+
       const updatedTodo = todos.map((todo) =>
         todo._id === _id ? response.data : todo,
       );
@@ -149,6 +185,11 @@ function App() {
       seteditid(null);
       setEditTitle("");
       seteditDescription("");
+
+      setErrors((prev) => ({
+        ...prev,
+        edit: "",
+      }));
     } catch (err) {
       setErrors((prev) => ({
         ...prev,
@@ -158,18 +199,7 @@ function App() {
   };
 
   // todo delete function
-  const DeleteTodo = async (_id, isCompleted) => {
-    if (!isCompleted) {
-      setErrors((prev) => ({
-        ...prev,
-        delete: {
-          id: _id,
-          message: "Please mark task as completed before deleting",
-        },
-      }));
-      return;
-    }
-
+  const DeleteTodo = async (_id) => {
     // clear old delete error
     setErrors((prev) => ({
       ...prev,
@@ -187,6 +217,7 @@ function App() {
       setTodos(updatedTodos);
 
       localStorage.setItem("localtodos", JSON.stringify(updatedTodos));
+      setdeleteTodo(null);
     } catch (err) {
       setErrors((prev) => ({
         ...prev,
@@ -223,6 +254,51 @@ function App() {
         </div>
       )}
 
+      {/* Todos Delete MOdal */}
+
+      {deleteTodo && (
+        <div
+          className="fixed inset-0 z-50 flex justify-center items-center bg-black/50"
+          onClick={() => setdeleteTodo(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white w-145.5 h-auto p-4 rounded-lg flex flex-col gap-9 popIn m-4"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold">Delete Task</h2>
+              <X
+                onClick={() => setdeleteTodo(null)}
+                className="cursor-pointer hover:text-red-500 transition-all duration-75"
+              />
+            </div>
+            <div className="flex justify-center items-center flex-col gap-17.75">
+              <div>
+                <p className="text-xm text-center font-normal">
+                  "{deleteTodo.title}" Will be permanenlty deleted.
+                </p>
+              </div>
+              <div className="flex justify-end items-center gap-3">
+                <button
+                  onClick={() => {
+                    DeleteTodo(deleteid);
+                  }}
+                  className="bg-red-500 w-25 h-9 rounded-lg text-white cursor-pointer text-sm"
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => setdeleteTodo(null)}
+                  className="bg-amber-950 w-25 h-9 rounded-lg text-white cursor-pointer text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Todos edits Modal */}
       {editid && (
         <div
@@ -248,7 +324,16 @@ function App() {
                 <input
                   type="text"
                   value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
+                  onChange={(e) => {
+                    setEditTitle(e.target.value);
+
+                    if (e.target.value.trim()) {
+                      setErrors((prev) => ({
+                        ...prev,
+                        edit: "",
+                      }));
+                    }
+                  }}
                   placeholder="Edit Title"
                   className={`border-2 w-full p-3 rounded-lg resize-none ${
                     errors.input || errors.edit
@@ -256,6 +341,9 @@ function App() {
                       : "border-black"
                   }`}
                 />
+                {editTitle && (
+                  <p className="text-sm text-red-500">{errors.edit}</p>
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -417,6 +505,7 @@ function App() {
                             {todo.description.length > 50 && (
                               <button
                                 className="text-sm"
+                                type="button"
                                 onClick={() =>
                                   setexpandID(
                                     expandId === todo._id ? null : todo._id,
@@ -444,17 +533,38 @@ function App() {
                       className="bg-amber-950 text-white p-1.5 rounded-full"
                     />
                     <button
-                      onClick={() => DeleteTodo(todo._id, todo.isCompleted)}
-                      className="bg-amber-950 w-19.5 h-11 rounded-lg text-white cursor-pointer text-sm"
+                      onClick={() => {
+                        setdeleteid(todo._id);
+                        setdeleteTodo(todo);
+                      }}
+                      className="bg-amber-950 w-19.5 h-9 rounded-lg text-white cursor-pointer text-sm"
                     >
                       Delete
                     </button>
                   </div>
-                  {errors.delete.id === todo._id && (
-                    <p className="text-red-500 text-sm">
-                      {errors.delete.message}
+                  <div className="flex gap-2 text-sm">
+                    <p className="font-medium">
+                      Created Time:&nbsp;
+                      <span className="font-normal">
+                        {new Date(todo.createdAt).toLocaleString("en-IN", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </span>
                     </p>
-                  )}
+
+                    {todo.createdAt !== todo.updatedAt && (
+                      <p className="font-medium">
+                        Updated Time:&nbsp;
+                        <span className="font-normal">
+                          {new Date(todo.updatedAt).toLocaleString("en-IN", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </span>
+                      </p>
+                    )}
+                  </div>
                 </div>
               ))}
           </ul>

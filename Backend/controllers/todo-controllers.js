@@ -42,6 +42,7 @@ const getsingleTodos = async (req, res) => {
 const createTodo = async (req, res) => {
   try {
     const { title, description, isCompleted } = req.body;
+    const userId = req.user && req.user.id;
 
     if (!title) {
       return res.status(404).json({
@@ -50,7 +51,22 @@ const createTodo = async (req, res) => {
       });
     }
 
-    const newTodo = await Todo.create({ title, description, isCompleted });
+    const existingTodo = await Todo.findOne({
+      title: { $regex: `^${title.trim()}$`, $options: "i" },
+    });
+
+    if (existingTodo) {
+      return res.status(400).json({
+        message: "Task already exists",
+      });
+    }
+
+    const newTodo = await Todo.create({
+      title,
+      description,
+      isCompleted,
+      userId: req.user.id,
+    });
     res.status(200).json(newTodo);
   } catch (error) {
     res.status(500).json({ message: "Please fill required fields" });
